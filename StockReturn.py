@@ -36,13 +36,13 @@ def main():
     
     menu=st.sidebar.selectbox('Menu', ['Page 1', 'Page 2', 'Page 3'])
     if menu=='Page 1':
-    st.header('Page 1')
-    df=pd.DataFrame(np.random.randn(10,5),columns=('c %d'% i for i in range(5)))
-    st.table(df)
+        st.header('Page 1')
+        df=pd.DataFrame(np.random.randn(10,5),columns=('c %d'% i for i in range(5)))
+        st.table(df)
     if menu=='Page 2':
-    st.header('Page 2')
-    st.json({'foo':'bar','baz':'boz','stuff':['stuff 1','stuff 2']})
+        st.header('Page 2')
+        st.json({'foo':'bar','baz':'boz','stuff':['stuff 1','stuff 2']})
     if menu=='Page 3':
-    st.header('Page 3')
+        st.header('Page 3')
 
 main()
