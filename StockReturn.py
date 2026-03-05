@@ -35,9 +35,10 @@ def main():
 
     
     menu=st.sidebar.selectbox('Graphs', ['Page 1', 'Page 2', 'Page 3'])
-    if menu=='Page 1':
-        st.header('Page 1')
-        df=pd.DataFrame(np.random.randn(10,5),columns=('c %d'% i for i in range(5)))
+    history1 = ticker.history(period="3mo")
+    if menu=='3 Months':
+        st.header('3 Months')
+        st.line_chart(history1.values)  
         st.table(df)
     if menu=='Page 2':
         st.header('Page 2')
