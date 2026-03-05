@@ -30,7 +30,7 @@ def main():
     profit = int(shares * current_price)
     print(format(profit, ","))
     st.write("Your investment of 10,000 dollars is now ", format(profit,","))
-
-
+    st.write("test")
+    
 
 main()
