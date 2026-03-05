@@ -34,7 +34,7 @@ def main():
     st.write("test")
 
     
-    graphs=st.sidebar.selectbox('Menu', ['Page 1', 'Page 2', 'Page 3'])
+    menu=st.sidebar.selectbox('Graphs', ['Page 1', 'Page 2', 'Page 3'])
     if menu=='Page 1':
         st.header('Page 1')
         df=pd.DataFrame(np.random.randn(10,5),columns=('c %d'% i for i in range(5)))
