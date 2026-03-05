@@ -1,6 +1,7 @@
 import yfinance as yf
 import streamlit as st
-
+import numpy as np
+import pandas as pd
 
 header = st.container()
 with header:
@@ -31,6 +32,17 @@ def main():
     print(format(profit, ","))
     st.write("Your investment of 10,000 dollars is now ", format(profit,","))
     st.write("test")
+
     
+    menu=st.sidebar.selectbox('Menu', ['Page 1', 'Page 2', 'Page 3'])
+    if menu=='Page 1':
+    st.header('Page 1')
+    df=pd.DataFrame(np.random.randn(10,5),columns=('c %d'% i for i in range(5)))
+    st.table(df)
+    if menu=='Page 2':
+    st.header('Page 2')
+    st.json({'foo':'bar','baz':'boz','stuff':['stuff 1','stuff 2']})
+    if menu=='Page 3':
+    st.header('Page 3')
 
 main()
