@@ -164,23 +164,45 @@ def main():
             col2 =  st.metric(label="Growth Percentage", value=f"+{percentage:.1f}%",chart_type="line",border=True)
         with col3:
             col3 =  st.metric(label="Current Growth Value", value=f"${profit:,.0f}",chart_type="line",border=True)
+
         one = yf.download(tickers=ticker, period="max")
-        publicdate = one.index[0]
+
+        if one.empty:
+            publicdate = "N/A"
+        else:
+            publicdate = one.index[0]
 
         information = yf.Ticker(ticker)
-        st.subheader("Overview")
-        row1,row2= st.columns([2,1])
+        companyname = ticker
+        industry = "N/A"
+        country = "N/A"
+        market = "N/A"
+        website = "N/A"
 
+        try:
+            info = information.info
+
+            if info != None:
+                companyname = info.get("longName", ticker)
+                industry = info.get("sector", "N/A")
+                country = info.get("country","N/A")
+                market = info.get("marketCap", "N/A")
+                website = info.get("website", "N/A")
+        except:
+            st.warning("Could not load company information at this time.")
+
+        st.subheader("Overview")
+        row1, row2 = st.columns([2, 1])
         with row1:
-            st.metric(label="Company:", value=information.info.get("longName"))
+            st.metric(label="Company:", value=companyname)
         with row2:
-            st.metric(label="Industry", value=information.info.get("sector"))
+            st.metric(label="Industry", value=industry)
 
         with st.expander("More Information"):
             st.write("IPO Date:", publicdate)
-            st.write("Country:", information.info.get("country"))
-            st.write("Market Cap: ", information.info.get("marketCap"))
-            st.write("Website:", information.info.get("website"))
+            st.write("Country:", country)
+            st.write("Market Cap: ", market)
+            st.write("Website:", website)
 
         st.subheader("Stock Growth Since Investment")
         final = price_data["Close"]
