@@ -217,8 +217,7 @@ def numreturn():
     shares = money//price
     spent = shares*price
     spare = money - spent
-    data = yf.Ticker(ticker)
-    st.subheader(f"{data.info.get("longName")} Shares Investment Summary")
+    st.subheader("Shares Investment Summary")
 
     col1, col2, col3 = st.columns(3)
     with col1:
