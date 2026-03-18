@@ -2,7 +2,8 @@ import yfinance as yf
 import streamlit as st
 import pandas as pd
 
-stockdata= "SP500.csv"
+#stockdata= "SP500.csv"
+stockdata = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/master/data/constituents.csv"
 readable = pd.read_csv(stockdata)
 stockname = readable["Symbol"].tolist()
 
@@ -101,7 +102,7 @@ def graph():
         st.warning("No stock data found.")
     else:
         st.line_chart(history["Close"])
-   
+
 def main():
 
     print("Begin MAIN PROGRAM")
