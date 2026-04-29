@@ -79,7 +79,7 @@ def graph():
     with st.sidebar:
         st.title("Data Scope")
         ticker = st.multiselect("Stock Tickers", placeholder="Enter Stock Ticker", options=sorted(set(stockname)),default=["AAPL"])
-        time = st.selectbox('Timeframe', ['1 Month', '3 Months', '6 Months', '12 Months', '24 Months'],
+        time = st.selectbox('Timeframe', ['1 Month', '3 Months', '6 Months', '12 Months', '24 Months', '60 Months'],
                             index=3)
 
         if st.button("back"):
@@ -94,7 +94,7 @@ def graph():
     cols[0].metric(label= f"Best Stock {ticker[0]}", value=0,chart_type="line",border=True)
     cols[1].metric(label=f"Worst Stock {ticker[0]}", value=0,chart_type="line",border=True)
 
-    timeline = {"1 Month":"1mo", "3 Months": "3mo", "6 Months": "6mo", "12 Months":"12mo", "24 Months":"24mo"}
+    timeline = {"1 Month":"1mo", "3 Months": "3mo", "6 Months": "6mo", "12 Months":"12mo", "24 Months":"24mo", "60 Months":"60mo"}
 
     history = yf.download(tickers=ticker, period=timeline[time])
     st.header(f"Last {time}")
@@ -140,8 +140,6 @@ def main():
         st.warning("Unable to download stock data. Please enter valid stock ticker.")
         return
 
-    print(price_data)
-    print(price_data.head(1))
     start_price = price_data.head(1)["Close"].values[0][0]
     print(start_price)
     current_price = price_data.tail(1)["Close"].values[0][0]
@@ -154,7 +152,8 @@ def main():
         st.warning("Please enter a valid investment amount.")
         return
     else:
-        percentage = (profit / invest) * 100
+        increase = profit - invest
+        percentage = (increase / invest) * 100
         st.subheader("Investment Summary")
 
         col1,col2,col3 = st.columns(3)
@@ -206,7 +205,13 @@ def main():
 
         st.subheader("Stock Growth Since Investment")
         final = price_data["Close"]
-        final = final.values
+
+        if ticker.endswith(".to".upper()):
+            final = final.values.flatten()
+            final = pd.Series(final, index=price_data.index)
+            #final = final.iloc[:, 0]
+
+        #final = final.values
         #st.write(final.iloc[:, 0])
         st.line_chart(final)
 
