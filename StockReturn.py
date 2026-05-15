@@ -1,6 +1,7 @@
 import yfinance as yf
 import streamlit as st
 import pandas as pd
+import datetime
 
 #stockdata= "SP500.csv"
 stockdata = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/master/data/constituents.csv"
@@ -9,6 +10,8 @@ stockname = readable["Symbol"].tolist()
 
 if "page" not in st.session_state:
     st.session_state.page = "welcome"
+
+st.set_page_config(layout="wide")
 
 def welcome_screen():
     header = st.container()
@@ -103,16 +106,200 @@ def graph():
     else:
         st.line_chart(history["Close"])
 
+def divreinvestment():
+    st.header("Dividend Reinvestment")
+
+    ticker = st.session_state.ticker1
+    start = st.session_state.start1
+    end = st.session_state.end1
+    shares = st.session_state.share
+    invest = st.session_state.invest
+    stockp = st.session_state.price
+
+
+    stockticker = yf.Ticker(ticker)
+    div = stockticker.dividends
+    divTime = div[start:end]
+
+
+    if div.empty:
+        st.info("This company does not provide Dividends.")
+    elif divTime.empty:
+        st.info("This company did not provide Dividends during this time period.")
+    else:
+        store = []
+        store2 = []
+        graph = []
+        originalshares = shares
+        shares2 = shares
+        leftover = 0
+        leftover2 = 0
+
+
+        for date1, price in divTime.items():
+            date1 = date1.date()
+
+            closer = date1 + datetime.timedelta(days=2)
+            stockcurr = yf.download(tickers=ticker, start=str(date1), end=closer)
+            stockpricefull = stockcurr.iloc[-1]
+            stockprice = stockcurr["Close"].values[0][0]
+
+            #inital stock price
+            initialprice = stockp["Close"].values[0][0]
+
+            totaldiv = shares * price
+
+            sharestobuy = totaldiv//stockprice
+
+
+            if (totaldiv//stockprice) > 0:
+                sharestobuy = totaldiv//stockprice
+                #st.write("we can buy", sharestobuy)
+                shares = shares + sharestobuy
+                leftover = leftover + (totaldiv - (stockprice*sharestobuy))
+                #st.write("REMAINDER AFTER REINVESTING: ", leftover)
+
+            totaldiv2 = shares2 * price
+            sharestobuy2 = totaldiv2//stockprice
+            shares2 = shares2 + sharestobuy2
+            leftover2 = leftover2 + (totaldiv2 - (stockprice * sharestobuy2))
+            sharesfromremainder = leftover2 // stockprice
+
+            total_value = shares * stockprice #regular dividend reinvestment
+            total_value2 = shares2 * stockprice #divident reinvestment + remainder reinvestment
+
+            if sharesfromremainder > 0:
+                shares2 = shares2 + sharesfromremainder
+                leftover2 = leftover2 - (stockprice * sharesfromremainder)
+            totaldiv = f"${totaldiv:,.2f}"
+            #stockprice = f"${stockprice:,.2f}"
+            store.append({"Date": date1, "Dividend Per Share": f"${price:,.2f}", "Stock Price": f"${stockprice:,.2f}",
+                          "Total Dividend Income": totaldiv, "Shares Bought": f"{sharestobuy:,.0f}",
+                          "Total Shares": f"{shares:,.0f}", "Remainder After Reinvestment": f"${leftover:,.2f}"})
+
+            store2.append({"Date": date1, "Dividend Per Share": f"${price:,.2f}", "Stock Price": f"${stockprice:,.2f}",
+                           "Total Dividend Income": totaldiv, "Shares Bought From Dividend Reinvestment": f"{sharestobuy2:,.0f}",
+                           "Shares Bought From Remainder": f"{sharesfromremainder:,.0f}", "Total Shares": f"{shares2:,.0f}",
+                           "Remainder After Reinvestment": f"${leftover2:,.2f}"})
+
+            tableinfo2 = pd.DataFrame(store2)
+            tableinfo = pd.DataFrame(store)
+
+            graph.append({"Dividend Payment Date": date1,"Total Market Value": f"${total_value:,.0f}"})
+
+        col1, col2, col3= st.columns(3)
+        with col1:
+            st.subheader("Shares")
+            st.metric(label="Initial Shares Owned", value=f"{originalshares:,.0f}")
+            st.metric(label="Shares Owned After Dividend & Remainder Reinvestment", value=f"{shares2:,.0f}")
+            st.metric(label="Shares Owned After Dividend Reinvestment", value=f"{shares:,.0f}")
+        with col2:
+            st.subheader("Investment Growth")
+            st.metric(label="Initial Investment Value", value=f"${invest:,.0f}")
+            st.metric(label="Total Stock Value After Dividend & Remainder Reinvestment", value=f"${total_value2:,.0f}")
+            st.metric(label="Total Stock Value After Dividend Reinvestment", value=f"${total_value:,.0f}")
+        with col3:
+            st.subheader("Stock Prices")
+            st.metric(label=f"Stock Price During Investment: {start}", value=f"${initialprice:,.2f} ")
+            st.metric(label=f"Stock Price At End Of Timeline: {end}", value=f"${stockprice:,.2f}")
+
+        #tables
+        st.subheader("Dividend Reinvestment Summaries")
+        with st.expander("Dividend Reinvestment Overview (No Remainder Reinvestment)"):
+            st.table(tableinfo)
+        with st.expander("Dividend Reinvestment Overview (Remainder Reinvestment Included)"):
+            st.table(tableinfo2)
+
+        graphdata = pd.DataFrame(graph)
+        graphdata = graphdata.set_index("Dividend Payment Date")
+
+        st.subheader("Shares Performance")
+        st.line_chart(graphdata)
+        st.subheader("Dividend Payment Intervals")
+        st.write(divTime)
+
+    if st.button("Return to Investment Analysis"):
+        st.session_state.page = "main"
+        st.rerun()
+
+def div():
+    st.header("Dividend Data")
+    ticker = st.session_state.ticker1
+    start = st.session_state.start1
+    end = st.session_state.end1
+    shares = st.session_state.share
+    profit = st.session_state.profit
+
+    stockticker = yf.Ticker(ticker)
+    div = stockticker.dividends
+    divTime = div[start:end]
+
+    if div.empty:
+        st.info("This company does not provide Dividends.")
+    elif divTime.empty:
+        st.info("This company did not provide Dividends during this time period.")
+    else:
+
+        # most recent value dividend
+        latest = divTime.iloc[-1]
+
+        latest_AT = div.iloc[-1]
+        at_date = div.index[-1]
+        at_date = at_date.date()
+
+        totalDiv = divTime.sum()
+        gain = shares * totalDiv
+        total = profit + gain
+        st.subheader(f"Dividends Investment Overview for {ticker}")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric(label="Timeframe: ", value=f"{start} to {end}", chart_type="line")
+        with col2:
+            st.metric(label=f"Latest Dividend Payment: {end}", value=f"${latest:,.2f}")
+        with col3:
+            st.metric(label=f"Current Investment Value:", value=f"${profit:,.2f}")
+
+        col4, col5,col6= st.columns(3)
+        with col4:
+            st.metric(label="Shares owned", value=f"{shares:.0f}")
+        with col5:
+            st.metric(label="Total Dividends from investment", value=f"${gain:,.2f}")
+        with col6:
+            st.metric(label="Total Investment Value including Dividends", value=f"${total:,.2f}")
+
+
+        st.line_chart(divTime)
+        st.write("Raw Data")
+        st.write(divTime)
+
+        st.subheader(f"Dividends from All Time Overview for {ticker}")
+        c1, c2= st.columns(2)
+        with c1:
+            st.metric(label="Latest Dividend Payment Date", value=str(at_date))
+        with c2:
+            st.metric(label="Latest Dividend Per Share", value=f"${latest_AT:,.2f}")
+
+        st.line_chart(div)
+        st.write("Raw Data")
+        st.write(div)
+
+    if st.button("Return to Investment Analysis"):
+        st.session_state.page = "main"
+        st.rerun()
+
+
 def main():
 
     print("Begin MAIN PROGRAM")
     with st.sidebar:
         st.sidebar.header("Enter your stock information")
-        ticker = st.sidebar.text_input("Enter stock ticker (e.g. AAPL):", "AAPL")
+
+        ticker = st.sidebar.text_input("Enter stock ticker (e.g. AAPL):", value=st.session_state.get("savedTicker","AAPL"), key="tickersave")
         ticker = ticker.upper()
-        invest = st.sidebar.number_input("Enter the Investment Amount")
-        start_date = st.sidebar.text_input("Start Date", "2002-06-25")
-        end_date = st.sidebar.text_input("End Date", "2025-10-09")
+        invest = st.sidebar.number_input("Enter the Investment Amount",value=st.session_state.get("savedInvest",1), key="investsave")
+        start_date = st.sidebar.text_input("Start Date", value=st.session_state.get("savedStart", "2002-06-25"),key="startsave")
+        end_date = st.sidebar.text_input("End Date", value=st.session_state.get("savedEnd","2025-10-09"), key="endsave")
+
 
         if st.button("Back"):
             st.session_state.page = "welcome"
@@ -151,6 +338,8 @@ def main():
     if invest <= 0:
         st.warning("Please enter a valid investment amount.")
         return
+    elif invest < start_price:
+        st.info("Unable to purchase stock at current market value")
     else:
         increase = profit - invest
         percentage = (increase / invest) * 100
@@ -160,9 +349,9 @@ def main():
         with col1:
             st.metric(label="Investment Value", value=f"${invest:,.0f}",chart_type="line",border=True)
         with col2:
-            col2 =  st.metric(label="Growth Percentage", value=f"+{percentage:.1f}%",chart_type="line",border=True)
+            st.metric(label="Growth Percentage", value=f"+{percentage:.1f}%",chart_type="line",border=True)
         with col3:
-            col3 =  st.metric(label="Current Growth Value", value=f"${profit:,.0f}",chart_type="line",border=True)
+            st.metric(label="Current Growth Value", value=f"${profit:,.0f}",chart_type="line",border=True)
 
         one = yf.download(tickers=ticker, period="max")
 
@@ -209,11 +398,32 @@ def main():
         if ticker.endswith(".to".upper()):
             final = final.values.flatten()
             final = pd.Series(final, index=price_data.index)
-            #final = final.iloc[:, 0]
 
-        #final = final.values
-        #st.write(final.iloc[:, 0])
         st.line_chart(final)
+
+        #Saved values
+        st.session_state.savedTicker = ticker
+        st.session_state.savedInvest = invest
+        st.session_state.savedStart = start_date
+        st.session_state.savedEnd = end_date
+
+        #set the linked variables to find dividend of company
+        st.session_state.ticker1 = ticker
+        st.session_state.start1 = start_date
+        st.session_state.end1 = end_date
+        st.session_state.share = shares
+        st.session_state.profit = profit
+        st.session_state.invest = invest
+        st.session_state.price = price_data
+
+        if st.button("View Dividend Information"):
+            st.session_state.page = "div"
+            st.rerun()
+
+        if st.button("View Dividend Reinvestment Information"):
+            st.session_state.page = "divreinvestment"
+            st.rerun()
+
 
 def numreturn():
     with st.sidebar:
@@ -270,4 +480,12 @@ if st.session_state.page == "new":
 
 if st.session_state.page == "graph":
     graph()
+
+if st.session_state.page == "div":
+    div()
+
+if st.session_state.page == "divreinvestment":
+    divreinvestment()
+
+
 
