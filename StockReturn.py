@@ -120,7 +120,15 @@ def divreinvestment():
     stockticker = yf.Ticker(ticker)
     div = stockticker.dividends
     divTime = div[start:end]
-
+    allTime = yf.download(ticker, start=start, end=end)
+    endPrice = float(allTime["Close"].iloc[-1])
+    # print(allTime)
+    st.write("Is every empty: ", allTime.empty)
+    st.write("show columns:", list(allTime.columns))
+    st.write("last rows:")
+    st.write(allTime.tail())
+    st.write(allTime)
+    st.write(endPrice)
 
     if div.empty:
         st.info("This company does not provide Dividends.")
@@ -135,8 +143,7 @@ def divreinvestment():
         leftover = 0
         leftover2 = 0
         #full time
-        allTime = yf.download(ticker,start=start, end=end)
-        endPrice = 264.25 # float(allTime["Close"].iloc[-1])
+
 
         for date1, price in divTime.items():
             date1 = date1.date()
