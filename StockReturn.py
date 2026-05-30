@@ -134,14 +134,16 @@ def divreinvestment():
         shares2 = shares
         leftover = 0
         leftover2 = 0
-
+        #full time
+        allTime = yf.download(ticker,start=start, end=end)
+        endPrice = float(allTime["Close"].iloc[-1])
 
         for date1, price in divTime.items():
             date1 = date1.date()
 
             closer = date1 + datetime.timedelta(days=2)
             stockcurr = yf.download(tickers=ticker, start=str(date1), end=closer)
-            stockpricefull = stockcurr.iloc[-1]
+            #stockpricefull = stockcurr.iloc[-1]
             stockprice = stockcurr["Close"].values[0][0]
 
             #inital stock price
@@ -168,6 +170,9 @@ def divreinvestment():
             total_value = shares * stockprice #regular dividend reinvestment
             total_value2 = shares2 * stockprice #divident reinvestment + remainder reinvestment
 
+            finalDividendValue = shares * endPrice
+            finalDividendValue2 = shares2 * endPrice
+
             if sharesfromremainder > 0:
                 shares2 = shares2 + sharesfromremainder
                 leftover2 = leftover2 - (stockprice * sharesfromremainder)
@@ -185,7 +190,8 @@ def divreinvestment():
             tableinfo2 = pd.DataFrame(store2)
             tableinfo = pd.DataFrame(store)
 
-            graph.append({"Dividend Payment Date": date1,"Total Market Value": f"${total_value:,.0f}"})
+            graph.append({"Dividend Payment Date": date1,"Total Market Value": total_value})
+
 
         col1, col2, col3= st.columns(3)
         with col1:
@@ -196,12 +202,12 @@ def divreinvestment():
         with col2:
             st.subheader("Investment Growth")
             st.metric(label="Initial Investment Value", value=f"${invest:,.0f}")
-            st.metric(label="Total Stock Value After Dividend & Remainder Reinvestment", value=f"${total_value2:,.0f}")
-            st.metric(label="Total Stock Value After Dividend Reinvestment", value=f"${total_value:,.0f}")
+            st.metric(label="Total Stock Value After Dividend & Remainder Reinvestment", value=f"${finalDividendValue2:,.0f}")
+            st.metric(label="Total Stock Value After Dividend Reinvestment", value=f"${finalDividendValue:,.0f}")
         with col3:
             st.subheader("Stock Prices")
             st.metric(label=f"Stock Price During Investment: {start}", value=f"${initialprice:,.2f} ")
-            st.metric(label=f"Stock Price At End Of Timeline: {end}", value=f"${stockprice:,.2f}")
+            st.metric(label=f"Stock Price At End Of Timeline: {end}", value=f"${endPrice:,.2f}")
 
         #tables
         st.subheader("Dividend Reinvestment Summaries")
@@ -211,10 +217,13 @@ def divreinvestment():
             st.table(tableinfo2)
 
         graphdata = pd.DataFrame(graph)
+        graphdata = graphdata.sort_values("Dividend Payment Date")
         graphdata = graphdata.set_index("Dividend Payment Date")
+        #graphdata = graphdata.set_axis(pricing)
 
         st.subheader("Shares Performance")
-        st.line_chart(graphdata)
+        with st.expander("Portfolio Value Graph"):
+            st.line_chart(graphdata)
         st.subheader("Dividend Payment Intervals")
         st.write(divTime)
 
@@ -349,7 +358,7 @@ def main():
         with col1:
             st.metric(label="Investment Value", value=f"${invest:,.0f}",chart_type="line",border=True)
         with col2:
-            st.metric(label="Growth Percentage", value=f"+{percentage:.1f}%",chart_type="line",border=True)
+            st.metric(label="Growth Percentage", value=f"{percentage:.1f}%",chart_type="line",border=True)
         with col3:
             st.metric(label="Current Growth Value", value=f"${profit:,.0f}",chart_type="line",border=True)
 
@@ -486,6 +495,5 @@ if st.session_state.page == "div":
 
 if st.session_state.page == "divreinvestment":
     divreinvestment()
-
 
 
