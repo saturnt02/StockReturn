@@ -121,7 +121,7 @@ def divreinvestment():
     div = stockticker.dividends
     divTime = div[start:end]
     allTime = yf.download(ticker, start=start, end=end)
-    endPrice = float(allTime["Close"].iloc[-1])
+    endPrice = float(str(allTime["Close"].iloc[-1]))
     # print(allTime)
     st.write("Is every empty: ", allTime.empty)
     st.write("show columns:", list(allTime.columns))
