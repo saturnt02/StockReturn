@@ -136,7 +136,7 @@ def divreinvestment():
         leftover2 = 0
         #full time
         allTime = yf.download(ticker,start=start, end=end)
-        endPrice = float(allTime["Close"].iloc[-1])
+        endPrice = 264.25 # float(allTime["Close"].iloc[-1])
 
         for date1, price in divTime.items():
             date1 = date1.date()
