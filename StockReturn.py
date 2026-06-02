@@ -116,20 +116,12 @@ def divreinvestment():
     invest = st.session_state.invest
     stockp = st.session_state.price
 
-
     stockticker = yf.Ticker(ticker)
     div = stockticker.dividends
     divTime = div[start:end]
     allTime = yf.download(ticker, start=start, end=end)
-    endPrice = float(str(allTime["Close"].iloc[-1]))
-    # print(allTime)
-    st.write("Is every empty: ", allTime.empty)
-    st.write("show columns:", list(allTime.columns))
-    st.write("last rows:")
-    st.write(allTime.tail())
-    st.write(allTime)
-    st.write(endPrice)
-
+    endPrice = float(allTime["Close"].iloc[-1].values[0])
+    
     if div.empty:
         st.info("This company does not provide Dividends.")
     elif divTime.empty:
@@ -142,7 +134,7 @@ def divreinvestment():
         shares2 = shares
         leftover = 0
         leftover2 = 0
-        #full time
+        
 
 
         for date1, price in divTime.items():
@@ -150,7 +142,7 @@ def divreinvestment():
 
             closer = date1 + datetime.timedelta(days=2)
             stockcurr = yf.download(tickers=ticker, start=str(date1), end=closer)
-            #stockpricefull = stockcurr.iloc[-1]
+           
             stockprice = stockcurr["Close"].values[0][0]
 
             #inital stock price
@@ -226,8 +218,7 @@ def divreinvestment():
         graphdata = pd.DataFrame(graph)
         graphdata = graphdata.sort_values("Dividend Payment Date")
         graphdata = graphdata.set_index("Dividend Payment Date")
-        #graphdata = graphdata.set_axis(pricing)
-
+      
         st.subheader("Shares Performance")
         with st.expander("Portfolio Value Graph"):
             st.line_chart(graphdata)
